@@ -43,6 +43,9 @@ public final class SettingsState implements PersistentStateComponent<SettingsSta
     private Integer timeout = Constant.TIMEOUT;
     private Integer maxRetries = Constant.MAX_RETRIES;
 
+    // UI settings
+    private boolean shouldShowGenerateTestGutterIcon = true;
+
     public static SettingsState getInstance() {
         return ApplicationManager.getApplication().getService(SettingsState.class);
     }
@@ -191,5 +194,13 @@ public final class SettingsState implements PersistentStateComponent<SettingsSta
 
     public void setDeepInfraKey(String deepInfraKey) {
         this.deepInfraKey = deepInfraKey;
+    }
+
+    public boolean isShouldShowGenerateTestGutterIcon() {
+        return shouldShowGenerateTestGutterIcon;
+    }
+
+    public void setShouldShowGenerateTestGutterIcon(boolean shouldShowGenerateTestGutterIcon) {
+        this.shouldShowGenerateTestGutterIcon = shouldShowGenerateTestGutterIcon;
     }
 }

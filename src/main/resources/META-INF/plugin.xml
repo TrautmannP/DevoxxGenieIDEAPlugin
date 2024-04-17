@@ -59,6 +59,7 @@
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
 
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
@@ -73,16 +74,18 @@
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
-        <notificationGroup id="com.devoxx.genie.notifications" displayType="BALLOON" />
+        <notificationGroup id="com.devoxx.genie.notifications" displayType="BALLOON"/>
+        <codeInsight.lineMarkerProvider language="JAVA"
+                                        implementationClass="com.devoxx.genie.ui.editor.GenerateTestsLineMarkerProvider"/>
     </extensions>
 
-<!-- Not used for now, experimental implementation -->
-<!--        <action id="com.devoxx.genie.action.AcceptAutocompleteAction"-->
-<!--                class="com.devoxx.genie.actions.AcceptAutocompleteAction"-->
-<!--                text="Accept Autocomplete Suggestion"-->
-<!--                description="Accept autocomplete suggestion">-->
-<!--            <keyboard-shortcut keymap="$default" first-keystroke="TAB"/>-->
-<!--            <keyboard-shortcut keymap="Mac OS X" first-keystroke="TAB"/>-->
-<!--        </action>-->
+    <!-- Not used for now, experimental implementation -->
+    <!--        <action id="com.devoxx.genie.action.AcceptAutocompleteAction"-->
+    <!--                class="com.devoxx.genie.actions.AcceptAutocompleteAction"-->
+    <!--                text="Accept Autocomplete Suggestion"-->
+    <!--                description="Accept autocomplete suggestion">-->
+    <!--            <keyboard-shortcut keymap="$default" first-keystroke="TAB"/>-->
+    <!--            <keyboard-shortcut keymap="Mac OS X" first-keystroke="TAB"/>-->
+    <!--        </action>-->
 
 </idea-plugin>
