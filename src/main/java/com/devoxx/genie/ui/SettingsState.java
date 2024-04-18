@@ -1,6 +1,7 @@
 package com.devoxx.genie.ui;
 
 import com.devoxx.genie.model.Constant;
+import com.devoxx.genie.model.enumarations.AutoCompletionMode;
 import com.devoxx.genie.ui.util.DoubleConverter;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PersistentStateComponent;
@@ -42,6 +43,9 @@ public final class SettingsState implements PersistentStateComponent<SettingsSta
 
     private Integer timeout = Constant.TIMEOUT;
     private Integer maxRetries = Constant.MAX_RETRIES;
+
+    // UI settings
+    private AutoCompletionMode autoCompletionMode = AutoCompletionMode.AUTOMATIC;
 
     public static SettingsState getInstance() {
         return ApplicationManager.getApplication().getService(SettingsState.class);
@@ -191,5 +195,13 @@ public final class SettingsState implements PersistentStateComponent<SettingsSta
 
     public void setDeepInfraKey(String deepInfraKey) {
         this.deepInfraKey = deepInfraKey;
+    }
+
+    public AutoCompletionMode getAutoCompletionMode() {
+        return autoCompletionMode;
+    }
+
+    public void setAutoCompletionMode(AutoCompletionMode autoCompletionMode) {
+        this.autoCompletionMode = autoCompletionMode;
     }
 }
