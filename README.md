@@ -1,4 +1,4 @@
-(9# Devoxx Genie 
+## Devoxx Genie 
 
 <img height="128" src="src/main/resources/META-INF/pluginIcon.svg" width="128"/>
 
@@ -25,7 +25,7 @@ In the IDEA settings you can modify the REST endpoints and the LLM parameters.  
 
 We now also support Cloud based LLMs (from v0.0.6 onwards), you can paste the API keys on the Settings page. 
 
-<img width="1107" alt="DevoxxGenieSettings" src="https://github.com/devoxx/DevoxxGenieIDEAPlugin/assets/179457/e3d62069-8db4-4be9-be80-8de62d5913f1">
+![SettingsPanelWithApiKeyButtons](https://github.com/devoxx/DevoxxGenieIDEAPlugin/assets/179457/af825417-692e-4e8c-a4c4-d5d42e44d73b)
 
 ### Requirements:
 

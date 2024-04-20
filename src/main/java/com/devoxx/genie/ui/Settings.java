@@ -1,7 +1,10 @@
 package com.devoxx.genie.ui;
 
 import com.devoxx.genie.ui.util.DoubleConverter;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.options.Configurable;
+import com.intellij.util.messages.MessageBus;
+import com.intellij.util.messages.MessageBusConnection;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
 
@@ -76,11 +79,11 @@ public class Settings implements Configurable {
         explainPromptField = addTextFieldWithLabel(settingsPanel, gbc, "Explain prompt :", settings.getExplainPrompt());
         reviewPromptField = addTextFieldWithLabel(settingsPanel, gbc, "Review prompt :", settings.getReviewPrompt());
         customPromptField = addTextFieldWithLabel(settingsPanel, gbc, "Custom prompt :", settings.getCustomPrompt());
-        openAiKeyField = addPasswordFieldWithLabel(settingsPanel, gbc, "OpenAI API Key :", settings.getOpenAIKey());
-        mistralKeyField = addPasswordFieldWithLabel(settingsPanel, gbc, "Mistral API Key :", settings.getMistralKey());
-        anthropicKeyField = addPasswordFieldWithLabel(settingsPanel, gbc, "Anthropic API Key :", settings.getAnthropicKey());
-        groqKeyField = addPasswordFieldWithLabel(settingsPanel, gbc, "Groq API Key :", settings.getGroqKey());
-        deepInfraKeyField = addPasswordFieldWithLabel(settingsPanel, gbc, "DeepInfra API Key :", settings.getDeepInfraKey());
+        openAiKeyField = addPasswordFieldWithLabel(settingsPanel, gbc, "OpenAI API Key :", settings.getOpenAIKey(), "https://platform.openai.com/api-keys");
+        mistralKeyField = addPasswordFieldWithLabel(settingsPanel, gbc, "Mistral API Key :", settings.getMistralKey(), "https://console.mistral.ai/api-keys");
+        anthropicKeyField = addPasswordFieldWithLabel(settingsPanel, gbc, "Anthropic API Key :", settings.getAnthropicKey(), "https://console.anthropic.com/settings/keys");
+        groqKeyField = addPasswordFieldWithLabel(settingsPanel, gbc, "Groq API Key :", settings.getGroqKey(), "https://console.groq.com/keys");
+        deepInfraKeyField = addPasswordFieldWithLabel(settingsPanel, gbc, "DeepInfra API Key :", settings.getDeepInfraKey(), "https://deepinfra.com/dash/api_keys");
         return settingsPanel;
     }
 
@@ -99,12 +102,26 @@ public class Settings implements Configurable {
     private JPasswordField addPasswordFieldWithLabel(JPanel panel,
                                                      GridBagConstraints gbc,
                                                      String label,
-                                                     String value) {
+                                                     String value,
+                                                     String toolTipMsg) {
+        JButton btnApiKey = new JButton("🔑");
+        btnApiKey.setToolTipText("Get your API Key from " + toolTipMsg);
+        btnApiKey.addActionListener(e -> {
+            try {
+                Desktop.getDesktop().browse(java.net.URI.create(toolTipMsg));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
         panel.add(new JLabel(label), gbc);
         gbc.gridx++;
+        JPanel jPanel = new JPanel();
+        jPanel.setLayout(new BorderLayout());
         JPasswordField passwordField = new JPasswordField(value);
         passwordField.setEchoChar('*');
-        panel.add(passwordField, gbc);
+        jPanel.add(passwordField, BorderLayout.CENTER);
+        jPanel.add(btnApiKey, BorderLayout.EAST);
+        panel.add(jPanel, gbc);
         resetGbc(gbc);
         return passwordField;
     }
@@ -220,6 +237,11 @@ public class Settings implements Configurable {
         if (isFieldModified(deepInfraKeyField, settings.getDeepInfraKey())) {
             settings.setDeepInfraKey(new String(deepInfraKeyField.getPassword()));
         }
+
+        // Now notify others
+        MessageBus messageBus = ApplicationManager.getApplication().getMessageBus();
+        messageBus.syncPublisher(SettingsChangeListener.TOPIC).settingsChanged();
+
     }
 
     @Override
