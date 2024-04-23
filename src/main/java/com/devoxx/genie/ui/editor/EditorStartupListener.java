@@ -68,11 +68,9 @@ public class EditorStartupListener implements EditorFactoryListener {
             @Override
             public void caretPositionChanged(@NotNull CaretEvent event) {
                 FileEditor selectedEditor = editorManager.getSelectedEditor();
-                if (selectedEditor != null && selectedEditor.equals(editor)) {
-                    if (event.getEditor() != editor || event.getCaret() == null
-                            || event.getCaret().getOffset() != editor.getCaretModel().getPrimaryCaret().getOffset()) {
-                        completionProvider.clear();
-                    }
+                if (selectedEditor != null && selectedEditor.equals(editor) && (event.getEditor() != editor || event.getCaret() == null
+                        || event.getCaret().getOffset() != editor.getCaretModel().getPrimaryCaret().getOffset())) {
+                    completionProvider.clear();
                 }
             }
         };

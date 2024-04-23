@@ -1,6 +1,7 @@
 package com.devoxx.genie.ui.editor;
 
 import com.devoxx.genie.DevoxxGenieClient;
+import com.devoxx.genie.ui.util.Debouncer;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.components.Service;
@@ -8,14 +9,14 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiDocumentManager;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 
 @Service
 public final class AutoCompletionProvider {
+
+    private final Debouncer<AutoCompletionContext> completionDebouncer = new Debouncer<>(this::executeAutoCompletion, 500);
 
     private AutoCompletionContext ongoingCompletion;
 
@@ -29,17 +30,13 @@ public final class AutoCompletionProvider {
             clear();
         }
 
-        InlineAutoCompletionService inlineCompletionService = ApplicationManager.getApplication().getService(InlineAutoCompletionService.class);
-
         try {
-            PsiFile compute = ReadAction.<PsiFile, Throwable>compute(() -> {
+            ReadAction.<PsiFile, Throwable>compute(() -> {
                 Project project = editor.getProject();
                 if (project == null) {
                     return null;
                 }
                 PsiFile file = PsiDocumentManager.getInstance(project).getPsiFile(editor.getDocument());
-                String text = editor.getDocument().getText();
-                PsiElement elementAt = file.findElementAt(offset);
                 String sourceCode = editor.getDocument().getText(new TextRange(0, offset));
 
                 CompletableFuture<String> task = CompletableFuture.supplyAsync(
@@ -47,19 +44,23 @@ public final class AutoCompletionProvider {
                 );
 
                 ongoingCompletion = new AutoCompletionContext(editor, offset, task);
-
-                task.thenAccept(response -> {
-                    if (response != null) {
-                        inlineCompletionService.show(editor, offset, response);
-                    }
-                });
+                completionDebouncer.call(ongoingCompletion);
 
                 return file;
             });
-            System.out.println("Break");
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void executeAutoCompletion(AutoCompletionContext context) {
+        context.task.thenAccept(response -> {
+            if (response != null) {
+                InlineAutoCompletionService inlineCompletionService = ApplicationManager.getApplication()
+                        .getService(InlineAutoCompletionService.class);
+                inlineCompletionService.show(context.editor, context.offset, response);
+            }
+        });
     }
 
     public void clear() {
@@ -68,6 +69,7 @@ public final class AutoCompletionProvider {
             return;
         }
 
+        completionDebouncer.clear();
         if (!ongoingCompletion.task.isDone()) {
             ongoingCompletion.task.cancel(true);
         }
@@ -79,7 +81,7 @@ public final class AutoCompletionProvider {
         return ongoingCompletion;
     }
 
-    public record AutoCompletionContext(Editor editor, int offset, Future<?> task) {
+    public record AutoCompletionContext(Editor editor, int offset, CompletableFuture<String> task) {
 
     }
 }
