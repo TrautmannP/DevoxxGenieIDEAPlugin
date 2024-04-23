@@ -43,6 +43,7 @@ public final class SettingsState implements PersistentStateComponent<SettingsSta
 
     private Integer timeout = Constant.TIMEOUT;
     private Integer maxRetries = Constant.MAX_RETRIES;
+    private Integer maxMemory = Constant.MAX_MEMORY;
 
     // UI settings
     private AutoCompletionMode autoCompletionMode = AutoCompletionMode.AUTOMATIC;
@@ -195,6 +196,14 @@ public final class SettingsState implements PersistentStateComponent<SettingsSta
 
     public void setDeepInfraKey(String deepInfraKey) {
         this.deepInfraKey = deepInfraKey;
+    }
+
+    public Integer getMaxMemory() {
+        return maxMemory;
+    }
+
+    public void setMaxMemory(Integer maxMemory) {
+        this.maxMemory = maxMemory;
     }
 
     public AutoCompletionMode getAutoCompletionMode() {

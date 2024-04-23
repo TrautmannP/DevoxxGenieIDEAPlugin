@@ -13,61 +13,44 @@ import com.devoxx.genie.model.enumarations.ModelProvider;
 import com.devoxx.genie.model.ollama.OllamaModelEntryDTO;
 import com.devoxx.genie.service.OllamaService;
 import com.devoxx.genie.ui.SettingsState;
+import com.devoxx.genie.ui.util.CircularQueue;
 import com.intellij.ide.util.PropertiesComponent;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.SystemMessage;
-import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.output.Response;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.data.message.SystemMessage;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.devoxx.genie.ui.Settings.MODEL_PROVIDER;
+import static com.devoxx.genie.ui.Settings.*;
 
 public class DevoxxGenieClient {
 
-    public static final String YOU_ARE_A_SOFTWARE_DEVELOPER_WITH_EXPERT_KNOWLEDGE_IN =
-            "You are a software developer with expert knowledge in ";
-    public static final String PROGRAMMING_LANGUAGE =
-            " programming language.";
     private static final Logger log = LoggerFactory.getLogger(DevoxxGenieClient.class);
-    private ModelProvider modelProvider = getModelProvider(ModelProvider.Ollama.name());
 
+    public static final String YOU_ARE_A_SOFTWARE_DEVELOPER_WITH_EXPERT_KNOWLEDGE_IN =
+        "You are a software developer with expert knowledge in ";
+    public static final String PROGRAMMING_LANGUAGE = " programming language.";
+    private ModelProvider modelProvider = getModelProvider(ModelProvider.Ollama.name());
     private String modelName;
+    private CircularQueue<ChatMessage> chatMessages;
 
     private DevoxxGenieClient() {
+        setChatMemorySize(SettingsState.getInstance().getMaxMemory());
+    }
+
+    private static final class InstanceHolder {
+        private static final DevoxxGenieClient instance = new DevoxxGenieClient();
     }
 
     public static DevoxxGenieClient getInstance() {
         return InstanceHolder.instance;
-    }
-
-    /**
-     * Create GPT4All model.
-     *
-     * @param chatModel the chat model
-     * @return the chat language model
-     */
-    private static ChatLanguageModel createGPT4AllModel(ChatModel chatModel) {
-        chatModel.baseUrl = SettingsState.getInstance().getGpt4allModelUrl();
-        return new GPT4AllChatModelFactory().createChatModel(chatModel);
-    }
-
-    /**
-     * Create LMStudio model.
-     *
-     * @param chatModel the chat model
-     * @return the chat language model
-     */
-    private static ChatLanguageModel createLmStudioModel(ChatModel chatModel) {
-        chatModel.baseUrl = SettingsState.getInstance().getLmstudioModelUrl();
-        return new LMStudioChatModelFactory().createChatModel(chatModel);
     }
 
     protected ModelProvider getModelProvider(String defaultValue) {
@@ -83,13 +66,19 @@ public class DevoxxGenieClient {
         this.modelName = modelName;
     }
 
+    public void setChatMemorySize(int memorySize) {
+        chatMessages = new CircularQueue<>(memorySize);
+    }
+
+    public int getChatMemorySize() {
+        return chatMessages.size();
+    }
+
     /**
      * Get the chat language model for selected model provider.
-     *
      * @return the chat language model
      */
     private ChatLanguageModel getChatLanguageModel() {
-        log.debug("Get chat language model: {}", modelProvider);
         ChatModel chatModel = initChatModelSettings();
         SettingsState settings = SettingsState.getInstance();
         return switch (modelProvider) {
@@ -98,62 +87,76 @@ public class DevoxxGenieClient {
             case GPT4All -> createGPT4AllModel(chatModel);
             case OpenAI -> new OpenAIChatModelFactory(settings.getOpenAIKey(), modelName).createChatModel(chatModel);
             case Mistral -> new MistralChatModelFactory(settings.getMistralKey(), modelName).createChatModel(chatModel);
-            case Anthropic ->
-                    new AnthropicChatModelFactory(settings.getAnthropicKey(), modelName).createChatModel(chatModel);
+            case Anthropic -> new AnthropicChatModelFactory(settings.getAnthropicKey(), modelName).createChatModel(chatModel);
             case Groq -> new GroqChatModelFactory(settings.getGroqKey(), modelName).createChatModel(chatModel);
-            case DeepInfra ->
-                    new DeepInfraChatModelFactory(settings.getDeepInfraKey(), modelName).createChatModel(chatModel);
+            case DeepInfra -> new DeepInfraChatModelFactory(settings.getDeepInfraKey(), modelName).createChatModel(chatModel);
         };
     }
 
     /**
+     * Create GPT4All model.
+     * @param chatModel the chat model
+     * @return the chat language model
+     */
+    private static ChatLanguageModel createGPT4AllModel(ChatModel chatModel) {
+        chatModel.setBaseUrl(SettingsState.getInstance().getGpt4allModelUrl());
+        return new GPT4AllChatModelFactory().createChatModel(chatModel);
+    }
+
+    /**
+     * Create LMStudio model.
+     * @param chatModel the chat model
+     * @return the chat language model
+     */
+    private static ChatLanguageModel createLmStudioModel(ChatModel chatModel) {
+        chatModel.setBaseUrl(SettingsState.getInstance().getLmstudioModelUrl());
+        return new LMStudioChatModelFactory().createChatModel(chatModel);
+    }
+
+    /**
      * Create Ollama model.
-     *
      * @param chatModel the chat model
      * @return the chat language model
      */
     private ChatLanguageModel createOllamaModel(ChatModel chatModel) {
         setLanguageModelName(chatModel);
-        chatModel.baseUrl = SettingsState.getInstance().getOllamaModelUrl();
+        chatModel.setBaseUrl(SettingsState.getInstance().getOllamaModelUrl());
         return new OllamaChatModelFactory().createChatModel(chatModel);
     }
 
     /**
      * Initialize chat model settings by default or by user settings.
-     *
      * @return the chat model
      */
     private @NotNull ChatModel initChatModelSettings() {
         ChatModel chatModel = new ChatModel();
-        chatModel.temperature = SettingsState.getInstance().getTemperature();
-        chatModel.maxRetries = SettingsState.getInstance().getMaxRetries();
-        chatModel.topP = SettingsState.getInstance().getTopP();
-        chatModel.timeout = SettingsState.getInstance().getTimeout();
+        chatModel.setTemperature(SettingsState.getInstance().getTemperature());
+        chatModel.setMaxRetries(SettingsState.getInstance().getMaxRetries());
+        chatModel.setTopP(SettingsState.getInstance().getTopP());
+        chatModel.setTimeout(SettingsState.getInstance().getTimeout());
         return chatModel;
     }
 
     /**
      * Set the (default) language model name when none is selected.
-     *
      * @param chatModel the chat model
      */
     private void setLanguageModelName(ChatModel chatModel) {
         if (modelName == null) {
             try {
                 OllamaModelEntryDTO[] models = new OllamaService().getModels();
-                chatModel.modelName = models[0].getName();
+                chatModel.setModelName(models[0].getName());
             } catch (IOException e) {
                 log.error("Failed to get Ollama models", e);
             }
         } else {
-            chatModel.modelName = modelName;
+            chatModel.setModelName(modelName);
         }
     }
 
     /**
      * Execute the user prompt
-     *
-     * @param userPrompt   the user prompt
+     * @param userPrompt the user prompt
      * @param selectedText the selected text
      * @return the prompt
      */
@@ -161,14 +164,23 @@ public class DevoxxGenieClient {
                                      String language,
                                      String selectedText) {
         ChatLanguageModel chatLanguageModel = getChatLanguageModel();
-        List<ChatMessage> messages = new ArrayList<>();
-        messages.add(new SystemMessage(
+        if (chatMessages.isEmpty()) {
+            chatMessages.add(new SystemMessage(
                 YOU_ARE_A_SOFTWARE_DEVELOPER_WITH_EXPERT_KNOWLEDGE_IN + language + PROGRAMMING_LANGUAGE +
-                        "Always return the response in Markdown." +
-                        "\n\nSelected code: " + selectedText));
-        messages.add(new UserMessage(userPrompt));
-        Response<AiMessage> generate = chatLanguageModel.generate(messages);
-        return generate.content().text();
+                    "Always return the response in Markdown." +
+                    "\n\nSelected code: " + selectedText));
+        }
+
+        chatMessages.add(new UserMessage(userPrompt));
+
+        try {
+            Response<AiMessage> generate = chatLanguageModel.generate(chatMessages.asList());
+            String response = generate.content().text();
+            chatMessages.add(new AiMessage(response));
+            return response;
+        } catch (Exception e) {
+            return "Failed to execute Genie prompt!\n" + e.getMessage();
+        }
     }
 
     public String executeGenieAutocompletionPrompt(String sourcecode, String language) {
@@ -184,7 +196,7 @@ public class DevoxxGenieClient {
 
     /**
      * EXPERIMENTAL : Execute continue prompt
-     *
+     * TODO : This is an experimental feature and may not work as expected.
      * @param selectedText the selected text
      * @return the prompt
      */
@@ -192,14 +204,10 @@ public class DevoxxGenieClient {
         ChatLanguageModel chatLanguageModel = getChatLanguageModel();
         List<ChatMessage> messages = new ArrayList<>();
         messages.add(new dev.langchain4j.data.message.SystemMessage(
-                YOU_ARE_A_SOFTWARE_DEVELOPER_WITH_EXPERT_KNOWLEDGE_IN + "JAVA" + PROGRAMMING_LANGUAGE +
-                        "\n\nSelected code: " + selectedText));
+            YOU_ARE_A_SOFTWARE_DEVELOPER_WITH_EXPERT_KNOWLEDGE_IN + "JAVA" + PROGRAMMING_LANGUAGE +
+                "\n\nSelected code: " + selectedText));
         messages.add(new UserMessage("Only return the code which finalises the code block."));
         Response<AiMessage> generate = chatLanguageModel.generate(messages);
         return generate.content().text();
-    }
-
-    public static final class InstanceHolder {
-        private static final DevoxxGenieClient instance = new DevoxxGenieClient();
     }
 }

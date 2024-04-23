@@ -18,19 +18,29 @@
 
         <h3>Key Features</h3>
         <UL>
-            <LI>Support for local language models: Ollama, LMStudio and GPT4ALL</LI>
+            <LI>Support for local and cloud based language models: Ollama, OpenAI, Anthropic, Groq, ...</LI>
             <LI>User defined prompts for selected code snippets</LI>
         </UL>
         <h3>Set-Up</h3>
         <UL>
             <LI>Install the plugin</LI>
             <LI>Make sure you have Ollama, LMStudio or GPT4All running</LI>
+            <LI>Optional: Add API Keys for Cloud based LLM providers</LI>
+            <LI>Optional: Update the command prompts in the Settings</LI>
+            <LI>Start using the plugin</LI>
         </UL>
     ]]></description>
 
     <change-notes><![CDATA[
+        <h2>V0.0.12</h2>
         <UL>
-            <LI>Initial release</LI>
+            <LI>Added chat memory (default 10 messages)</LI>
+            <LI>You can turn of the chat memory in the settings</LI>
+        </UL>
+        <h2>V0.0.11</h2>
+        <UL>
+            <LI>Added Settings page link</LI>
+            <LI>Catch LLM communication error</LI>
         </UL>
         <h2>V0.0.10</h2>
         <UL>
@@ -68,6 +78,9 @@
             <LI>Introduced CommandHandler for the predefined commands</LI>
             <LI>Settings now uses persistent store</LI>
         </UL>
+        <UL>
+            <LI>Initial release</LI>
+        </UL>
     ]]></change-notes>
 
     <!-- Product and plugin compatibility requirements.
@@ -89,6 +102,25 @@
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="com.devoxx.genie.notifications" displayType="BALLOON" />
     </extensions>
+
+    <applicationListeners>
+        <listener class="com.devoxx.genie.listeners.ApplicationListener"
+                  topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+    </applicationListeners>
+
+    <actions>
+        <group id="MyPluginActions"
+               text="My Plugin"
+               description="Sample Plugin Actions">
+            <action id="com.devoxx.genie.actions.AddToContextAction"
+                    icon="/META-INF/pluginIcon.svg"
+                    class="com.devoxx.genie.actions.AddToContextAction"
+                    text="Add To Context Window"
+                    description="Add the selected text to the context window">
+                <add-to-group group-id="EditorPopupMenu" anchor="first" />
+            </action>
+        </group>
+    </actions>
 
 <!-- Not used for now, experimental implementation -->
 <!--        <action id="com.devoxx.genie.action.AcceptAutocompleteAction"-->
