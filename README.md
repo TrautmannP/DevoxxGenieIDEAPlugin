@@ -9,15 +9,15 @@ https://github.com/devoxx/DevoxxGenieIDEAPlugin/assets/179457/7c7e8744-4bcf-4730
 
 ### Key Features:
 
-- **100% Java**: An IDEA plugin using local LLM models using Java and [Langchain4J](https://github.com/langchain4j/langchain4j)
-- **Explain**: Explain code using local LLM's.
-- **Review**: Review and improve your code using local LLM's.
-- **Test**: Generate unit tests for your code using local LLM's.
+- **100% Java**: An IDEA plugin using local and cloud based LLM models. Fully developed in Java using [Langchain4J](https://github.com/langchain4j/langchain4j)
+- **Explain**: Explain code using local and cloud-based LLM's.
+- **Review**: Review and improve your code using local and cloud-based LLM's.
+- **Test**: Generate unit tests for your code using local and cloud-based LLM's.
 
 ### Installation:
 
-- **From IntelliJ IDEA**: Go to `Settings` -> `Plugins` -> `Marketplace` -> Enter 'Devoxx' to find plugin (pending approval) OR Install plugin from Disk
-- **From Source Code**: Clone the repository, build the plugin using `./gradlew buildPlugin`, and install the plugin from the `build/distributions` directory and select file 'DevoxxGenie-0.0.3.zip'
+- **From IntelliJ IDEA**: Go to `Settings` -> `Plugins` -> `Marketplace` -> Enter 'Devoxx' to find [plugin](https://plugins.jetbrains.com/plugin/24169-devoxxgenie) OR Install plugin from Disk
+- **From Source Code**: Clone the repository, build the plugin using `./gradlew buildPlugin`, and install the plugin from the `build/distributions` directory and select file 'DevoxxGenie-0.0.XX.zip'
 
  
 ### LLM Settings
