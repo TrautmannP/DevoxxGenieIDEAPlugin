@@ -82,7 +82,9 @@ public class EditorStartupListener implements EditorFactoryListener {
         return new DocumentListener() {
             @Override
             public void documentChanged(@NotNull DocumentEvent event) {
-                if (editorManager.getSelectedEditor() == editor && settings.getAutoCompletionMode() == AutoCompletionMode.AUTOMATIC) {
+                Editor selectedEditor = editorManager.getSelectedTextEditor();
+                AutoCompletionMode autoCompletionMode = settings.getAutoCompletionMode();
+                if (selectedEditor == editor && autoCompletionMode == AutoCompletionMode.AUTOMATIC) {
                     AutoCompletionProvider.AutoCompletionContext ongoingCompletion = completionProvider.getOngoingCompletion();
                     int primaryCaretOffset = editor.getCaretModel().getPrimaryCaret().getOffset();
                     if (ongoingCompletion == null || ongoingCompletion.offset() != primaryCaretOffset
